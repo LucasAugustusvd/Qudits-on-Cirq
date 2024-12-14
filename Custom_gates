@@ -1,0 +1,45 @@
+class GeneralizedCNOTGate(cirq.Gate):
+    def __init__(self, d):
+        """
+        Args:
+            d (int): Dimension of the qudit.
+        """
+        self.d = d
+
+    def _qid_shape_(self):
+        return (self.d, self.d)  # Acts on two qudits.
+
+    def _unitary_(self):
+        # Construct the generalized CNOT matrix.
+        U = np.zeros((self.d**2, self.d**2), dtype=complex)
+        for control in range(self.d):
+            for target in range(self.d):
+                new_target = (target + control) % self.d
+                U[control * self.d + target, control * self.d + new_target] = 1
+        return U
+
+    def _circuit_diagram_info_(self, args):
+        return ["G-CNOT(Control)", "G-CNOT(Target)"]
+    
+class GeneralizedRotationGate(cirq.Gate):
+    def __init__(self, d, axis_matrix, theta):
+        """
+        Args:
+            d (int): Dimension of the qudit.
+            axis_matrix (np.ndarray): The Gell-Mann matrix representing the rotation axis.
+            theta (float): Rotation angle in radians.
+        """
+        self.d = d
+        self.axis_matrix = axis_matrix
+        self.theta = theta
+
+    def _qid_shape_(self):
+        return (self.d,)
+
+    def _unitary_(self):
+        # Compute the unitary matrix for the rotation
+        return np.eye(self.d) + 1j * np.sin(self.theta) * self.axis_matrix - \
+               (1 - np.cos(self.theta)) * np.matmul(self.axis_matrix, self.axis_matrix)
+
+    def _circuit_diagram_info_(self, args):
+        return f"R({self.theta})"
